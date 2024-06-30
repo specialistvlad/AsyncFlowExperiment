@@ -38,6 +38,7 @@ class MyPubSub:
         self.subscribers: Dict[str, List[Callable[[Any], None]]] = defaultdict(list)
         self.queue = asyncio.Queue()
         self._running = True
+        self._dispatch_task = None
 
     async def publish(self, topic: str, data: Any):
         logger.info(
@@ -60,23 +61,28 @@ class MyPubSub:
         self.subscribers[topic].append(async_callback_wrapper)
 
     async def _dispatch(self):
-        while self._running:
-            topic, data = await self.queue.get()
-            for callback in self.subscribers.get(topic, []):
-                asyncio.create_task(callback(data))
+        while self._running or not self.queue.empty():
+            try:
+                topic, data = await asyncio.wait_for(self.queue.get(), timeout=0.1)
+                for callback in self.subscribers.get(topic, []):
+                    asyncio.create_task(callback(data))
+            except asyncio.TimeoutError:
+                continue
 
     def run(self):
         logger.info(
             "PubSub is starting...",
             extra={"class_name": "MyPubSub", "func_name": "run"},
         )
-        asyncio.create_task(self._dispatch())
+        self._dispatch_task = asyncio.create_task(self._dispatch())
         logger.info(
             "PubSub is running.", extra={"class_name": "MyPubSub", "func_name": "run"}
         )
 
-    def close(self):
+    async def close(self):
         self._running = False
+        if self._dispatch_task:
+            await self._dispatch_task
         logger.info(
             "PubSub is closing...",
             extra={"class_name": "MyPubSub", "func_name": "close"},
@@ -165,22 +171,6 @@ class MyChain:
         else:
             self.result_event.set()
 
-    def seek(self, index: int, value):
-        logger.info(
-            f"Seeking to index {index} with value {value}",
-            extra={"class_name": "MyChain", "func_name": "seek"},
-        )
-        if not (0 <= index < len(self.chain)):
-            raise IndexError("Index out of range")
-        self.index = index
-        self.value = value
-
-    async def play(self):
-        logger.info(
-            "Playing the chain...", extra={"class_name": "MyChain", "func_name": "play"}
-        )
-        await self.step()
-
     def reset(self):
         logger.info(
             "Resetting the chain...",
@@ -188,6 +178,13 @@ class MyChain:
         )
         self.index = 0
         self.value = self.initial_value
+
+    async def play(self):
+        logger.info(
+            "Playing the chain...", extra={"class_name": "MyChain", "func_name": "play"}
+        )
+        self.reset()
+        await self.step()
 
     async def play_and_wait_result(self):
         logger.info(
@@ -222,42 +219,8 @@ def divide(input_value: int, divisor: int):
     return input_value / divisor
 
 
-async def test_chain(chain):
-    logger.info("Start Chain Test", extra={"class_name": "", "func_name": "test_chain"})
-
-    try:
-        result = await chain.play_and_wait_result()
-        expected_result = 12
-
-        if result == expected_result:
-            logger.info(
-                f"Chain End: {result} - ✅ OK",
-                extra={"class_name": "", "func_name": "test_chain"},
-            )
-        else:
-            logger.info(
-                f"Chain End: {result} - ❌ Failed",
-                extra={"class_name": "", "func_name": "test_chain"},
-            )
-    except Exception as e:
-        logger.info(
-            f"Chain Error: {str(e)} - ❌ Failed",
-            extra={"class_name": "", "func_name": "test_chain"},
-        )
-
-
 async def main():
-    pubsub = MyPubSub()
-    chain = (
-        MyChain(10, pubsub)
-        .pipe_by_name("add", 5)
-        .pipe_by_name("subtract", 3)
-        .pipe_by_name("multiply", 2)
-        .pipe_by_name("divide", 2)
-    )
-    pubsub.run()
-    await test_chain(chain)
-    pubsub.close()
+    info("You can not run this file directly. Please run lib_test.py instead.")
 
 
 if __name__ == "__main__":
