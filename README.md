@@ -16,31 +16,37 @@ The goal is to develop a library supporting multiple languages, including Go, C+
 
 Currently in the experimental phase, the project has no implemented features and is focused on exploring concepts and laying the groundwork for future development.
 
-## Use Cases
+## Use Case
 
-1. **Extending Python Backend**:
+### Scenario 1: Extending Existing Python Backend
 
-   - **Scenario**: Adding new features to an existing Python backend.
-   - **Requirement**: Smooth integration without extensive modifications.
+- **Context**: You have a Python backend that requires new features.
+- **Requirement**: Integrate the new features seamlessly without significant modifications to the existing system.
+- **Solution**: `AsyncFlowExperiment` enables you to extend your backend with asynchronous tasks, improving scalability and performance while maintaining code integrity.
 
-2. **Reusing Open Source Libraries**:
+### Scenario 2: Reusing Open Source Libraries
 
-   - **Scenario**: Utilizing high-quality libraries in Go and C++.
-   - **Challenge**: Integration complexity due to containers and dependencies.
+- **Context**: You find open-source libraries in Go and C++ that fit your requirements perfectly.
+- **Challenge**: These libraries have their own dependencies and containers, complicating direct integration.
+- **Solution**: `AsyncFlowExperiment` allows you to incorporate these libraries without modifying their core code, facilitating smooth integration and leveraging their full potential.
 
-3. **Maintaining Existing Examples**:
+### Scenario 3: Maintaining Integrity of Existing Examples
 
-   - **Scenario**: Using well-established open-source library examples.
-   - **Requirement**: Minimal alterations to proven examples.
+- **Context**: Open-source libraries come with well-established examples that solve specific tasks effectively.
+- **Requirement**: Use these examples without significant alterations to ensure their reliability.
+- **Solution**: With `AsyncFlowExperiment`, you can integrate these examples into your workflow, preserving their functionality and ensuring consistent performance.
 
-4. **Handling Complex Pipelines**:
+### Scenario 4: Handling Complex Pipelines
 
-   - **Scenario**: Tasks requiring a complex pipeline across multiple libraries.
-   - **Challenge**: Ensuring smooth coordination and data flow.
+- **Context**: Your project involves complex tasks that span multiple libraries.
+- **Challenge**: Ensuring smooth data flow and coordination across different libraries.
+- **Solution**: `AsyncFlowExperiment` provides a framework for managing complex pipelines, ensuring efficient task execution and data handling.
 
-5. **Seamless Integration with Minimal Changes**:
-   - **Solution**: Using `AsyncFlowExperiment` for integrating diverse libraries.
-   - **Benefit**: Efficient task handling with minimal modifications, maintaining pipeline integrity.
+### Scenario 5: Seamless Integration with Minimal Changes
+
+- **Context**: You need to integrate diverse libraries into your backend with minimal changes.
+- **Solution**: `AsyncFlowExperiment` facilitates the seamless integration of various libraries, allowing for efficient task handling and maintaining the integrity of your existing pipeline.
+- **Benefit**: Achieve efficient task execution and results handling with minimal modifications, preserving the integrity of your backend and its workflows.
 
 ## Comparison with Similar Libraries/Frameworks/Projects
 
