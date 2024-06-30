@@ -101,10 +101,6 @@ class MyBroker:
 broker = MyBroker()
 
 
-def register_function(func):
-    return broker.register(func)
-
-
 class MyChain:
     def __init__(self, value, broker: MyBroker):
         self.value = value
@@ -209,29 +205,29 @@ class MyChain:
         return self.value
 
 
-@register_function
+@broker.register
 def add(input_value: int, amount: int):
     return input_value + amount
 
 
-@register_function
+@broker.register
 def subtract(input_value: int, amount: int):
     return input_value - amount
 
 
-@register_function
+@broker.register
 def multiply(input_value: int, factor: int):
     return input_value * factor
 
 
-@register_function
+@broker.register
 def divide(input_value: int, divisor: int):
     if divisor == 0:
         raise ValueError("Division by zero is not allowed.")
     return input_value / divisor
 
 
-@register_function
+@broker.register
 def load_array(n):
     return [i for i in range(n)]
 
