@@ -42,10 +42,9 @@ class MyPubSub:
     def run(self):
         info(
             "PubSub is starting...",
-            extra={"class_name": "MyPubSub", "func_name": "run"},
         )
         self._dispatch_task = asyncio.create_task(self._dispatch())
-        info("PubSub is running.", extra={"class_name": "MyPubSub", "func_name": "run"})
+        info("PubSub is running.")
 
     async def close(self):
         self._running = False
@@ -62,7 +61,7 @@ class MyBroker:
     def register(self, func):
         name = func.__name__
         self.functions[name] = func
-        self.generate_hash(func)
+        info(self.generate_hash(func))
         return func
 
     def get_function(self, name):
