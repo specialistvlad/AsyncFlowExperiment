@@ -40,9 +40,7 @@ class MyPubSub:
                 continue
 
     def run(self):
-        info(
-            "PubSub is starting...",
-        )
+        info("PubSub is starting...")
         self._dispatch_task = asyncio.create_task(self._dispatch())
         info("PubSub is running.")
 
@@ -56,16 +54,21 @@ class MyPubSub:
 class MyBroker:
     def __init__(self):
         self.functions = {}
+        self.name_to_hash = {}
         self.pubsub = MyPubSub()
 
     def register(self, func):
-        name = func.__name__
-        self.functions[name] = func
-        info(self.generate_hash(func))
+        func_hash = self.generate_hash(func)
+        self.functions[func_hash] = func
+        self.name_to_hash[func.__name__] = func_hash
+        info(f"Registered function '{func.__name__}'")
         return func
 
-    def get_function(self, name):
-        return self.functions.get(name)
+    def get_function(self, func_hash):
+        return self.functions.get(func_hash)
+
+    def get_hash_by_name(self, name):
+        return self.name_to_hash.get(name)
 
     def run_pubsub(self):
         self.pubsub.run()
@@ -79,7 +82,6 @@ class MyBroker:
         input_interface = str(sig.parameters)
         output_interface = str(sig.return_annotation)
         hash_input = name + input_interface + output_interface
-        info(f"Generating hash for function '{name}' with input: {hash_input}")
         return hashlib.sha256(hash_input.encode()).hexdigest()
 
 
@@ -106,10 +108,11 @@ class MyChain:
         )
 
     def pipe_by_name(self, func_name, *args, **kwargs):
-        info(f"Adding function '{func_name}' to the chain...")
-        if func_name not in self.broker.functions:
+        func_hash = self.broker.get_hash_by_name(func_name)
+        if not func_hash:
             raise ValueError(f"Function '{func_name}' is not registered.")
-        self.chain.append((func_name, args, kwargs))
+        info(f"Adding function '{func_name}' to the chain...")
+        self.chain.append((func_name, func_hash, args, kwargs))
         return self
 
     async def step(self):
@@ -117,21 +120,22 @@ class MyChain:
         if self.index >= len(self.chain):
             raise IndexError("Index out of range")
 
-        func_name, args, kwargs = self.chain[self.index]
+        func_name, func_hash, args, kwargs = self.chain[self.index]
         await self.pubsub.publish(
             "step_execution",
             {
                 "index": self.index,
                 "func_name": func_name,
+                "func_hash": func_hash,
                 "args": args,
                 "kwargs": kwargs,
             },
         )
 
     async def handle_step_execution(self, data):
-        info(f"Executing step {data['index']}")
-        func_name = data["func_name"]
-        func = self.broker.get_function(func_name)
+        info(f"Executing step {data['index']} with function '{data['func_name']}'")
+        func_hash = data["func_hash"]
+        func = self.broker.get_function(func_hash)
         args = data["args"]
         kwargs = data["kwargs"]
 
