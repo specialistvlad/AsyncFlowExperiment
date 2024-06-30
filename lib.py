@@ -6,6 +6,10 @@ from logging import basicConfig, info, INFO
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional
 
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
 basicConfig(level=INFO)
 
 
@@ -204,6 +208,26 @@ class MyChain:
         await self.play()
         await self.result_event.wait()
         return self.value
+
+    def visualize_dependencies(self):
+        logging.info(
+            "****************************************************************************************************"
+        )
+        if self.head:
+            self._draw_tree(self.head)
+
+        logging.info(
+            "****************************************************************************************************"
+        )
+        return self
+
+    def _draw_tree(self, node, prefix="", is_last=True):
+        logging.info(
+            f"{prefix}{'`- ' if is_last else '|- '}{node.func_name} ({node.func_hash})"
+        )
+        prefix += "   " if is_last else "|  "
+        if node.next:
+            self._draw_tree(node.next, prefix, is_last=True)
 
 
 @broker.register

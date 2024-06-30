@@ -19,6 +19,7 @@ async def test_simple_chain():
             .pipe_by_name("subtract", 3)
             .pipe_by_name("multiply", 2)
             .pipe_by_name("divide", 3)
+            .visualize_dependencies()
             .play_and_wait_result()
         )
         assert result == 8, "The chain calculation did not return the expected result."
