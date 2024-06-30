@@ -1,38 +1,41 @@
 import pytest
 import asyncio
-import logging
-from lib import MyChain, MyPubSub
+from lib import (
+    MyChain,
+    broker,
+    MyBroker,
+    MyPubSub,
+)  # Import necessary classes from the library
 
 
 @pytest.mark.asyncio
 async def test_simple_chain():
-    pubsub = MyPubSub()
-    pubsub.run()
+    broker.run_pubsub()
 
     try:
-        assert 8 == await (
-            MyChain(10, pubsub)
+        result = await (
+            MyChain(10, broker)
             .pipe_by_name("add", 5)
             .pipe_by_name("subtract", 3)
             .pipe_by_name("multiply", 2)
             .pipe_by_name("divide", 3)
             .play_and_wait_result()
-        ), "The chain calculation did not return the expected result."
+        )
+        assert result == 8, "The chain calculation did not return the expected result."
     finally:
-        await pubsub.close()
+        await broker.close_pubsub()
 
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Not implemented yet.")
 async def test_nested_chain():
-    pubsub = MyPubSub()
-    pubsub.run()
+    broker.run_pubsub()
 
     try:
         result = await (
-            MyChain(10, pubsub)
+            MyChain(10, broker)
             .pipe(
-                lambda value: MyChain(value, pubsub)
+                lambda value: MyChain(value, broker)
                 .pipe_by_name("add", 5)
                 .pipe_by_name("subtract", 3)
                 .pipe_by_name("multiply", 2)
@@ -46,21 +49,20 @@ async def test_nested_chain():
         )
         expected_result = [0, 1, 2, 3, 4]
         assert (
-            expected_result == result
+            result == expected_result
         ), "The chain calculation did not return the expected result."
     finally:
-        await pubsub.close()
+        await broker.close_pubsub()
 
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Not implemented yet.")
 async def test_flat_map():
-    pubsub = MyPubSub()
-    pubsub.run()
+    broker.run_pubsub()
 
     try:
         result = await (
-            MyChain(None, pubsub)
+            MyChain(None, broker)
             .pipe_by_name("load_array", 5)
             .map_by_name("add", 5)
             .map_by_name("subtract", 3)
@@ -70,24 +72,23 @@ async def test_flat_map():
         )
         expected_result = [0, 1, 2, 3, 4]
         assert (
-            expected_result == result
+            result == expected_result
         ), "The chain calculation did not return the expected result."
     finally:
-        await pubsub.close()
+        await broker.close_pubsub()
 
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Not implemented yet.")
 async def test_nested_map():
-    pubsub = MyPubSub()
-    pubsub.run()
+    broker.run_pubsub()
 
     try:
         result = await (
-            MyChain(None, pubsub)
+            MyChain(None, broker)
             .pipe_by_name("load_array", 5)
             .map(
-                lambda value: MyChain(value, pubsub)
+                lambda value: MyChain(value, broker)
                 .pipe_by_name("add", 5)
                 .pipe_by_name("subtract", 3)
                 .pipe_by_name("multiply", 2)
@@ -97,7 +98,7 @@ async def test_nested_map():
         )
         expected_result = [0, 1, 2, 3, 4]
         assert (
-            expected_result == result
+            result == expected_result
         ), "The chain calculation did not return the expected result."
     finally:
-        await pubsub.close()
+        await broker.close_pubsub()
