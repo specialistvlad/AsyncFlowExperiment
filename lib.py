@@ -25,12 +25,10 @@ counter = 5
 function_container = {}
 
 
-def register_function(name):
-    def decorator(func):
-        function_container[name] = func
-        return func
-
-    return decorator
+def register_function(func):
+    name = func.__name__
+    function_container[name] = func
+    return func
 
 
 class MyPubSub:
@@ -197,26 +195,31 @@ class MyChain:
         return self.value
 
 
-@register_function("add")
+@register_function
 def add(input_value: int, amount: int):
     return input_value + amount
 
 
-@register_function("subtract")
+@register_function
 def subtract(input_value: int, amount: int):
     return input_value - amount
 
 
-@register_function("multiply")
+@register_function
 def multiply(input_value: int, factor: int):
     return input_value * factor
 
 
-@register_function("divide")
+@register_function
 def divide(input_value: int, divisor: int):
     if divisor == 0:
         raise ValueError("Division by zero is not allowed.")
     return input_value / divisor
+
+
+@register_function
+def load_array(n):
+    return [i for i in range(n)]
 
 
 async def main():
