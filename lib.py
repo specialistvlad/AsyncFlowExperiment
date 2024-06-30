@@ -4,7 +4,7 @@ import inspect
 import hashlib
 from logging import basicConfig, info, INFO
 from collections import defaultdict
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 basicConfig(level=INFO)
 
@@ -88,12 +88,23 @@ class MyBroker:
 broker = MyBroker()
 
 
+class ChainNode:
+    def __init__(self, func_name: str, func_hash: str, args: tuple, kwargs: dict):
+        self.func_name = func_name
+        self.func_hash = func_hash
+        self.args = args
+        self.kwargs = kwargs
+        self.prev: Optional[ChainNode] = None
+        self.next: Optional[ChainNode] = None
+
+
 class MyChain:
     def __init__(self, value, broker: MyBroker):
         self.value = value
         self.initial_value = value
-        self.chain = []
-        self.index = 0
+        self.head: Optional[ChainNode] = None
+        self.tail: Optional[ChainNode] = None
+        self.current: Optional[ChainNode] = None
         self.broker = broker
         self.pubsub = broker.pubsub
         self.result_event = asyncio.Event()
@@ -112,28 +123,42 @@ class MyChain:
         if not func_hash:
             raise ValueError(f"Function '{func_name}' is not registered.")
         info(f"Adding function '{func_name}' to the chain...")
-        self.chain.append((func_name, func_hash, args, kwargs))
+        new_node = ChainNode(func_name, func_hash, args, kwargs)
+        if self.tail:
+            self.tail.next = new_node
+            new_node.prev = self.tail
+            self.tail = new_node
+        else:
+            self.head = self.tail = new_node
         return self
 
     async def step(self):
-        info(f"Stepping to index {self.index}")
-        if self.index >= len(self.chain):
-            raise IndexError("Index out of range")
+        if not self.current:
+            self.current = self.head
 
-        func_name, func_hash, args, kwargs = self.chain[self.index]
+        if not self.current:
+            raise IndexError("No functions in the chain")
+
+        func_name, func_hash, args, kwargs = (
+            self.current.func_name,
+            self.current.func_hash,
+            self.current.args,
+            self.current.kwargs,
+        )
         await self.pubsub.publish(
             "step_execution",
             {
-                "index": self.index,
                 "func_name": func_name,
                 "func_hash": func_hash,
                 "args": args,
                 "kwargs": kwargs,
+                "parent": self.current.prev.func_hash if self.current.prev else None,
+                "child": self.current.next.func_hash if self.current.next else None,
             },
         )
 
     async def handle_step_execution(self, data):
-        info(f"Executing step {data['index']} with function '{data['func_name']}'")
+        info(f"Executing function '{data['func_name']}'")
         func_hash = data["func_hash"]
         func = self.broker.get_function(func_hash)
         args = data["args"]
@@ -144,21 +169,28 @@ class MyChain:
         else:
             self.value = func(self.value, *args, **kwargs)
 
-        self.index += 1
         await self.pubsub.publish(
-            "step_executed", {"index": self.index, "value": self.value}
+            "step_executed",
+            {
+                "func_hash": func_hash,
+                "input": (self.value, *args),
+                "output": self.value,
+                "parent": data["parent"],
+                "child": data["child"],
+            },
         )
 
     async def handle_step_executed(self, data):
-        info(f"Step {data['index']} executed with value: {data['value']}")
-        if self.index < len(self.chain):
+        info(f"Function '{data['func_hash']}' executed with result: {data['output']}")
+        if self.current and self.current.next:
+            self.current = self.current.next
             await self.step()
         else:
             self.result_event.set()
 
     def reset(self):
         info("Resetting the chain...")
-        self.index = 0
+        self.current = None
         self.value = self.initial_value
 
     async def play(self):
