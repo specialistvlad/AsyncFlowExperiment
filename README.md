@@ -1,73 +1,100 @@
-# Create a Virtual Environment
+# AsyncFlowExperiment
 
-python -m venv venv
+## Purpose
 
-# Activate the Virtual Environment
+AsyncFlowExperiment explores asynchronous programming by building and managing function chains and publish-subscribe mechanisms in a distributed environment. It aims to create a framework for chaining functions and handling asynchronous events across multiple workers to enhance scalability and performance.
 
-# On Windows
+## Problem Addressed
 
-venv\Scripts\activate
+The project simplifies the creation and management of distributed asynchronous workflows. By using named functions and a publish-subscribe system, it facilitates the development of complex, non-blocking workflows that efficiently distribute tasks across multiple workers.
 
-# On macOS/Linux
+## Objectives
 
-source venv/bin/activate
+The goal is to develop a library supporting multiple languages, including Go, C++, and JavaScript, enabling seamless integration and interaction between different software ecosystems.
 
-# Install pytest and hupper
+## Project Status
 
-pip install pytest hupper
+Currently in the experimental phase, the project has no implemented features and is focused on exploring concepts and laying the groundwork for future development.
 
-# Save the Installed Packages to requirements.txt
+## Use Cases
 
-pip freeze > requirements.txt
+1. **Extending Python Backend**:
 
-# Create README.md
+   - **Scenario**: Adding new features to an existing Python backend.
+   - **Requirement**: Smooth integration without extensive modifications.
 
-echo "# Project Name
+2. **Reusing Open Source Libraries**:
 
-## Setup
+   - **Scenario**: Utilizing high-quality libraries in Go and C++.
+   - **Challenge**: Integration complexity due to containers and dependencies.
 
-### Create and Activate Virtual Environment
+3. **Maintaining Existing Examples**:
 
-```sh
-python -m venv venv
+   - **Scenario**: Using well-established open-source library examples.
+   - **Requirement**: Minimal alterations to proven examples.
 
-# On Windows
+4. **Handling Complex Pipelines**:
 
-venv\Scripts\activate
+   - **Scenario**: Tasks requiring a complex pipeline across multiple libraries.
+   - **Challenge**: Ensuring smooth coordination and data flow.
 
-# On macOS/Linux
+5. **Seamless Integration with Minimal Changes**:
+   - **Solution**: Using `AsyncFlowExperiment` for integrating diverse libraries.
+   - **Benefit**: Efficient task handling with minimal modifications, maintaining pipeline integrity.
 
-source venv/bin/activate
-```
+## Comparison with Similar Libraries/Frameworks/Projects
 
-### Install Dependencies
+| Library             | Python Support | Go Support | C++ Support | JS/TS Support | Effort to integrate to existing code | Effort to integrate to existing infrastructure | Async Code support | Focus on Flow Management |
+| ------------------- | -------------- | ---------- | ----------- | ------------- | ------------------------------------ | ---------------------------------------------- | ------------------ | ------------------------ |
+| **Current project** | Yes            | Planned    | Planned     | Planned       | TBD                                  | Integrates in your ecosystem                   | Yes                | Yes                      |
+| **Prefect**         | Yes            | No         | No          | No            | Medium                               | Medium                                         | Yes                | Yes                      |
+| **Celery**          | Yes            | No         | No          | No            | Medium                               | High                                           | Yes                | No                       |
+| **Dask**            | Yes            | No         | No          | No            | Medium                               | Medium                                         | Yes                | No                       |
+| **Apache Airflow**  | Yes            | No         | No          | No            | High                                 | High                                           | Limited            | Yes                      |
+| **Ray**             | Yes            | No         | No          | No            | Medium                               | Medium                                         | Yes                | Yes                      |
+| **Taskiq**          | Yes            | No         | No          | No            | Medium                               | Medium                                         | Yes                | No                       |
 
-```sh
-pip install -r requirements.txt
-```
+## Contributions
 
-### Install `pytest` and `hupper`
+While I am not actively seeking maintainers at the moment, any help with development, testing, and documentation is greatly appreciated. If you have experience with asynchronous programming in Python and are interested in contributing, please reach out through GitHub.
 
-```sh
-pip install pytest hupper
-```
+## How to Setup the Project
 
-### Save Dependencies
+1. Clone the repository:
 
-```sh
-pip freeze > requirements.txt
-```
+   ```sh
+   git clone https://github.com/yourusername/AsyncFlowExperiment.git
+   cd AsyncFlowExperiment
+   ```
 
-## Running Tests
+2. Create a virtual environment:
 
-```sh
-pytest
-```
+   ```sh
+   python -m venv venv
+   source venv/bin/activate   # On Windows, use `venv\Scripts\activate`
+   ```
 
-## Using `hupper` for Automatic Reloading
+3. Install the dependencies:
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-```sh
-hupper -m pytest
-```
+## How to Run It
 
-" > README.md
+1. Run the tests:
+
+   ```sh
+   pytest
+   ```
+
+2. Use the `ptw` library to watch for test changes and automatically run tests:
+
+   ```sh
+   ptw
+   ```
+
+3. To explore the functionality, you can modify and run the `lib_test.py` file. Note that the main script is designed to be run with pytest and is not meant to be executed directly. You can add your own tests or modify existing ones to see how the asynchronous chains and publish-subscribe system work.
+
+## License
+
+This project is licensed under the MIT License.
