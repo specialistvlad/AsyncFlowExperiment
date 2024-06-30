@@ -1,25 +1,12 @@
 import asyncio
 import logging
-from logging import info
+import inspect
+import hashlib
+from logging import basicConfig, info, INFO
 from collections import defaultdict
 from typing import Any, Callable, Dict, List
 
-
-# Custom formatter to include class name and function name in log messages
-class CustomFormatter(logging.Formatter):
-    def format(self, record):
-        record.class_name = record.__dict__.get("class_name", "") or "<unknown>"
-        record.func_name = record.__dict__.get("func_name", "") or "<unknown>"
-        return super().format(record)
-
-
-formatter = CustomFormatter(
-    "%(levelname)s | %(class_name)s | %(func_name)s | %(message)s"
-)
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logging.basicConfig(level=logging.INFO, handlers=[handler])
-logger = logging.getLogger()
+basicConfig(level=INFO)
 
 
 class MyPubSub:
@@ -30,10 +17,7 @@ class MyPubSub:
         self._dispatch_task = None
 
     async def publish(self, topic: str, data: Any):
-        logger.info(
-            f"Publishing to topic '{topic}'",
-            extra={"class_name": "MyPubSub", "func_name": "publish"},
-        )
+        info(f"Publishing to topic '{topic}'")
         await self.queue.put((topic, data))
 
     def subscribe(self, topic: str, callback: Callable[[Any], None]):
@@ -43,10 +27,7 @@ class MyPubSub:
             else:
                 await callback(data)
 
-        logger.info(
-            f"Subscribing to topic '{topic}'",
-            extra={"class_name": "MyPubSub", "func_name": "subscribe"},
-        )
+        info(f"Subscribing to topic '{topic}'")
         self.subscribers[topic].append(async_callback_wrapper)
 
     async def _dispatch(self):
@@ -59,23 +40,18 @@ class MyPubSub:
                 continue
 
     def run(self):
-        logger.info(
+        info(
             "PubSub is starting...",
             extra={"class_name": "MyPubSub", "func_name": "run"},
         )
         self._dispatch_task = asyncio.create_task(self._dispatch())
-        logger.info(
-            "PubSub is running.", extra={"class_name": "MyPubSub", "func_name": "run"}
-        )
+        info("PubSub is running.", extra={"class_name": "MyPubSub", "func_name": "run"})
 
     async def close(self):
         self._running = False
         if self._dispatch_task:
             await self._dispatch_task
-        logger.info(
-            "PubSub is closing...",
-            extra={"class_name": "MyPubSub", "func_name": "close"},
-        )
+        info("PubSub is closing...")
 
 
 class MyBroker:
@@ -86,6 +62,7 @@ class MyBroker:
     def register(self, func):
         name = func.__name__
         self.functions[name] = func
+        self.generate_hash(func)
         return func
 
     def get_function(self, name):
@@ -96,6 +73,15 @@ class MyBroker:
 
     async def close_pubsub(self):
         await self.pubsub.close()
+
+    def generate_hash(self, func: Callable) -> str:
+        name = func.__name__
+        sig = inspect.signature(func)
+        input_interface = str(sig.parameters)
+        output_interface = str(sig.return_annotation)
+        hash_input = name + input_interface + output_interface
+        info(f"Generating hash for function '{name}' with input: {hash_input}")
+        return hashlib.sha256(hash_input.encode()).hexdigest()
 
 
 broker = MyBroker()
@@ -121,20 +107,14 @@ class MyChain:
         )
 
     def pipe_by_name(self, func_name, *args, **kwargs):
-        logger.info(
-            f"Adding function '{func_name}' to the chain...",
-            extra={"class_name": "MyChain", "func_name": "pipe_by_name"},
-        )
+        info(f"Adding function '{func_name}' to the chain...")
         if func_name not in self.broker.functions:
             raise ValueError(f"Function '{func_name}' is not registered.")
         self.chain.append((func_name, args, kwargs))
         return self
 
     async def step(self):
-        logger.info(
-            f"Stepping to index {self.index}",
-            extra={"class_name": "MyChain", "func_name": "step"},
-        )
+        info(f"Stepping to index {self.index}")
         if self.index >= len(self.chain):
             raise IndexError("Index out of range")
 
@@ -150,10 +130,7 @@ class MyChain:
         )
 
     async def handle_step_execution(self, data):
-        logger.info(
-            f"Executing step {data['index']}",
-            extra={"class_name": "MyChain", "func_name": "handle_step_execution"},
-        )
+        info(f"Executing step {data['index']}")
         func_name = data["func_name"]
         func = self.broker.get_function(func_name)
         args = data["args"]
@@ -170,35 +147,24 @@ class MyChain:
         )
 
     async def handle_step_executed(self, data):
-        logger.info(
-            f"Step {data['index']} executed with value: {data['value']}",
-            extra={"class_name": "MyChain", "func_name": "handle_step_executed"},
-        )
+        info(f"Step {data['index']} executed with value: {data['value']}")
         if self.index < len(self.chain):
             await self.step()
         else:
             self.result_event.set()
 
     def reset(self):
-        logger.info(
-            "Resetting the chain...",
-            extra={"class_name": "MyChain", "func_name": "reset"},
-        )
+        info("Resetting the chain...")
         self.index = 0
         self.value = self.initial_value
 
     async def play(self):
-        logger.info(
-            "Playing the chain...", extra={"class_name": "MyChain", "func_name": "play"}
-        )
+        info("Playing the chain...")
         self.reset()
         await self.step()
 
     async def play_and_wait_result(self):
-        logger.info(
-            "Playing the chain and waiting for result...",
-            extra={"class_name": "MyChain", "func_name": "play_and_wait_result"},
-        )
+        info("Playing the chain and waiting for result...")
         self.result_event.clear()
         await self.play()
         await self.result_event.wait()
