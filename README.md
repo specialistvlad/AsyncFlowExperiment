@@ -1,5 +1,7 @@
 # AsyncFlowExperiment
 
+## The idea
+
 AsyncFlowExperiment explores asynchronous programming by building and managing function chains and publish-subscribe mechanisms in a distributed environment. It aims to create a framework for chaining functions and handling asynchronous events across multiple workers to enhance scalability and performance. The project simplifies the creation and management of distributed asynchronous workflows by using named functions and a publish-subscribe system. This approach facilitates the development of complex, non-blocking workflows that efficiently distribute tasks across multiple workers. The goal is to develop a library supporting multiple languages, including Go, C++, and JavaScript, enabling seamless integration and interaction between different software ecosystems.
 
 ## Project Status
