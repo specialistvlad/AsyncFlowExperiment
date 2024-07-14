@@ -45,6 +45,7 @@ class MyPubSub:
 
     def run(self):
         info("PubSub is starting...")
+
         self._dispatch_task = asyncio.create_task(self._dispatch())
         info("PubSub is running.")
 
@@ -136,6 +137,20 @@ class MyChain:
             self.head = self.tail = new_node
         return self
 
+    def pipe(self, chain_fn):
+        # Execute the function to get a new MyChain instance
+        new_chain = chain_fn(self.value)
+        if not isinstance(new_chain, MyChain):
+            raise ValueError("The function must return a MyChain instance.")
+
+        # Append the new chain's nodes to the current chain
+        node = new_chain.head
+        while node:
+            self.pipe_by_name(node.func_name, *node.args, **node.kwargs)
+            node = node.next
+
+        return self
+
     async def step(self):
         if not self.current:
             self.current = self.head
@@ -211,20 +226,18 @@ class MyChain:
 
     def visualize_dependencies(self):
         logging.info(
-            "****************************************************************************************************"
+            "*********************************************************************************************"
         )
         if self.head:
             self._draw_tree(self.head)
 
         logging.info(
-            "****************************************************************************************************"
+            "*********************************************************************************************"
         )
         return self
 
     def _draw_tree(self, node, prefix="", is_last=True):
-        logging.info(
-            f"{prefix}{'`- ' if is_last else '|- '}{node.func_name} ({node.func_hash})"
-        )
+        logging.info(f"{prefix}{'`- ' if is_last else '|- '}{node.func_name}")
         prefix += "   " if is_last else "|  "
         if node.next:
             self._draw_tree(node.next, prefix, is_last=True)
